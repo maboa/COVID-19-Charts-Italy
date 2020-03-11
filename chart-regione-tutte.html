@@ -76,11 +76,6 @@
       data: {
           labels: rowData[regionNumber],
           datasets: [{
-              label: 'deceased',
-              backgroundColor: 'rgb(255, 132, 99)',
-              borderColor: 'rgb(255, 132, 99)',
-              data: rowDeceduti[regionNumber]
-          },{
               label: 'current cases',
               backgroundColor: 'rgb(255, 99, 132)',
               borderColor: 'rgb(255, 99, 132)',
@@ -91,6 +86,12 @@
               backgroundColor: 'rgb(99, 255, 132)',
               borderColor: 'rgb(99, 255, 132)',
               data: rowGuariti[regionNumber]
+          },
+          {
+              label: 'deceased',
+              backgroundColor: 'rgb(255, 132, 99)',
+              borderColor: 'rgb(255, 132, 99)',
+              data: rowDeceduti[regionNumber]
           }
         ]
       },

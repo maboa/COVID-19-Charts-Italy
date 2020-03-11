@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>COVID-19 cases in Italy by Region</title>
+</head>
+<body>
+<style>
+  body {
+    text-align: center; 
+    font-family: 'Linux Libertine','Georgia','Times',serif; 
+    color: #404040
+  }
+
+  .canvas-holder {
+    padding:16px;
+  }
+</style>
+
+<h2>COVID-19 cases in Italy by Region</h2>
+
+<div id="chart-holder"></div>
+
+<h4>source : <a href="https://github.com/pcm-dpc/COVID-19">https://github.com/pcm-dpc/COVID-19</a></h4>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3"></script>
+<script>
+
+  // set up the 20 canvases for the 20 regions
+
+  for (var t = 1; t <= 20; t++) {
+    document.getElementById('chart-holder').innerHTML += `<h3><span class="region"></span></h3><div class="canvas-holder"><canvas id="myChart${t}"></canvas></div>`;
+  }
+
+  var rowRegione = [];
+  var rowData = [];
+  var rowInfetti = [];
+  var rowGuariti = [];
+  var rowDeceduti = [];
+
+  //fetch("backup-dpc-covid19-ita-regioni.json")
+  fetch("https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-json/dpc-covid19-ita-regioni.json")
+    .then(function(response) {
+      return response.json();
+    })
+    .then(function(result) {
+      for (var r = 1; r <= 20; r++) {
+        rowData[r] = [];
+        rowInfetti[r] = [];
+        rowGuariti[r] = [];
+        rowDeceduti[r] = [];
+      }
+
+      for (var i in result) {
+        rowRegione[result[i].codice_regione] = result[i].denominazione_regione;
+        rowData[result[i].codice_regione].push(result[i].data.substr(0,10)); // just the yyyy-mm-dd
+        rowInfetti[result[i].codice_regione].push(result[i].totale_attualmente_positivi);
+        rowGuariti[result[i].codice_regione].push(result[i].dimessi_guariti);
+        rowDeceduti[result[i].codice_regione].push(result[i].deceduti);
+      }
+
+      for (var s = 1; s <= 20; s++) {
+        document.getElementsByClassName('region')[s-1].innerText = rowRegione[s];
+        drawChart(s);
+      }
+      
+    });
+
+  function drawChart(regionNumber) {
+    var ctx = document.getElementById('myChart'+regionNumber).getContext('2d');
+    var chart = new Chart(ctx, {
+      // The type of chart we want to create
+      type: 'line',
+  
+      // The data for our datasets
+      data: {
+          labels: rowData[regionNumber],
+          datasets: [{
+              label: 'deceased',
+              backgroundColor: 'rgb(255, 132, 99)',
+              borderColor: 'rgb(255, 132, 99)',
+              data: rowDeceduti[regionNumber]
+          },{
+              label: 'current cases',
+              backgroundColor: 'rgb(255, 99, 132)',
+              borderColor: 'rgb(255, 99, 132)',
+              data: rowInfetti[regionNumber]
+          },
+          {
+              label: 'recovered',
+              backgroundColor: 'rgb(99, 255, 132)',
+              borderColor: 'rgb(99, 255, 132)',
+              data: rowGuariti[regionNumber]
+          }
+        ]
+      },
+  
+      // Configuration options go here
+      options: {
+        scales: {
+            yAxes: [{
+                stacked: true
+            }]
+        }
+      }
+    });
+  }
+
+  </script>
+  </body>
+  </html>

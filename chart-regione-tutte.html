@@ -29,7 +29,7 @@
   // set up the 20 canvases for the 20 regions
 
   for (var t = 1; t <= 20; t++) {
-    document.getElementById('chart-holder').innerHTML += `<h3><span class="region"></span></h3><div class="canvas-holder"><canvas id="myChart${t}"></canvas></div>`;
+    document.getElementById('chart-holder').innerHTML += `<h3><span class="region"></span></h3><div class="canvas-holder"><canvas id="myChart${t}"></canvas></div><div class="canvas-holder style="height:100"><canvas id="mortalityChart${t}"></canvas></div>`;
   }
 
   var rowRegione = [];
@@ -37,6 +37,7 @@
   var rowInfetti = [];
   var rowGuariti = [];
   var rowDeceduti = [];
+  var rowMortalita = [];
 
   //fetch("backup-dpc-covid19-ita-regioni.json")
   fetch("https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-json/dpc-covid19-ita-regioni.json")
@@ -49,6 +50,7 @@
         rowInfetti[r] = [];
         rowGuariti[r] = [];
         rowDeceduti[r] = [];
+        rowMortalita[r] = [];
       }
 
       for (var i in result) {
@@ -57,16 +59,18 @@
         rowInfetti[result[i].codice_regione].push(result[i].totale_attualmente_positivi);
         rowGuariti[result[i].codice_regione].push(result[i].dimessi_guariti);
         rowDeceduti[result[i].codice_regione].push(result[i].deceduti);
+        rowMortalita[result[i].codice_regione].push(Math.round((100 * result[i].deceduti / result[i].totale_casi)*100)/100); // rounded to 2 decimal placees
       }
 
       for (var s = 1; s <= 20; s++) {
         document.getElementsByClassName('region')[s-1].innerText = rowRegione[s];
-        drawChart(s);
+        drawInfectionChart(s);
+        drawMortalityChart(s);
       }
       
     });
 
-  function drawChart(regionNumber) {
+  function drawInfectionChart(regionNumber) {
     var ctx = document.getElementById('myChart'+regionNumber).getContext('2d');
     var chart = new Chart(ctx, {
       // The type of chart we want to create
@@ -103,6 +107,31 @@
                 stacked: true
             }]
         }
+      }
+    });
+  }
+
+  function drawMortalityChart(regionNumber) {
+    var ctx = document.getElementById('mortalityChart'+regionNumber).getContext('2d');
+    var chart = new Chart(ctx, {
+      // The type of chart we want to create
+      type: 'line',
+  
+      // The data for our datasets
+      data: {
+          labels: rowData[regionNumber],
+          datasets: [{
+              label: 'Mortality rate %',
+              backgroundColor: 'rgb(100, 100, 100)',
+              borderColor: 'rgb(66, 66, 66)',
+              data: rowMortalita[regionNumber]
+          }
+        ]
+      },
+  
+      // Configuration options go here
+      options: {
+        maintainAspectRatio: false,
       }
     });
   }

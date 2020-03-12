@@ -26,12 +26,20 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3"></script>
 <script>
 
+  document.getElementById('chart-holder').innerHTML += `<h3><span>Italy</span></h3><div class="canvas-holder"><canvas id="nationalChart">></canvas></div><div class="canvas-holder style="height:100"><div class="canvas-holder style="height:100"><canvas id="natMortalityChart"></canvas></div>`;
+
   // set up the 20 canvases for the 20 regions
 
   for (var t = 1; t <= 20; t++) {
     document.getElementById('chart-holder').innerHTML += `<h3><span class="region"></span></h3><div class="canvas-holder"><canvas id="myChart${t}"></canvas></div><div class="canvas-holder style="height:100"><canvas id="mortalityChart${t}"></canvas></div>`;
   }
 
+
+  var rowNatData = [];
+  var rowNatInfetti = [];
+  var rowNatGuariti = [];
+  var rowNatDeceduti = [];
+  var rowNatMortalita = [];
   var rowRegione = [];
   var rowData = [];
   var rowInfetti = [];
@@ -39,12 +47,39 @@
   var rowDeceduti = [];
   var rowMortalita = [];
 
-  //fetch("backup-dpc-covid19-ita-regioni.json")
+  fetch("https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-json/dpc-covid19-ita-andamento-nazionale.json")
+    .then(function(response) {
+      return response.json();
+    })
+    .then(function(result) {
+
+      for (var r = 1; r <= 20; r++) {
+        rowData[r] = [];
+        rowInfetti[r] = [];
+        rowGuariti[r] = [];
+        rowDeceduti[r] = [];
+        rowMortalita[r] = [];
+      }
+
+      for (var i in result) {
+        rowNatData.push(result[i].data.substr(0,10)); // just the yyyy-mm-dd
+        rowNatInfetti.push(result[i].totale_attualmente_positivi);
+        rowNatGuariti.push(result[i].dimessi_guariti);
+        rowNatDeceduti.push(result[i].deceduti);
+        rowNatMortalita.push(Math.round((100 * result[i].deceduti / result[i].totale_casi)*100)/100); // rounded to 2 decimal places
+      }
+
+      drawNationalInfectionChart();  
+      drawNationalMortalityChart();     
+
+    });
+
   fetch("https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-json/dpc-covid19-ita-regioni.json")
     .then(function(response) {
       return response.json();
     })
     .then(function(result) {
+
       for (var r = 1; r <= 20; r++) {
         rowData[r] = [];
         rowInfetti[r] = [];
@@ -59,18 +94,60 @@
         rowInfetti[result[i].codice_regione].push(result[i].totale_attualmente_positivi);
         rowGuariti[result[i].codice_regione].push(result[i].dimessi_guariti);
         rowDeceduti[result[i].codice_regione].push(result[i].deceduti);
-        rowMortalita[result[i].codice_regione].push(Math.round((100 * result[i].deceduti / result[i].totale_casi)*100)/100); // rounded to 2 decimal placees
+        rowMortalita[result[i].codice_regione].push(Math.round((100 * result[i].deceduti / result[i].totale_casi)*100)/100); // rounded to 2 decimal places
       }
 
       for (var s = 1; s <= 20; s++) {
         document.getElementsByClassName('region')[s-1].innerText = rowRegione[s];
-        drawInfectionChart(s);
+        drawRegionalInfectionChart(s);
         drawMortalityChart(s);
       }
       
     });
 
-  function drawInfectionChart(regionNumber) {
+  function drawNationalInfectionChart() {
+    var ctx = document.getElementById('nationalChart').getContext('2d');
+
+    var chart = new Chart(ctx, {
+      // The type of chart we want to create
+      type: 'line',
+  
+      // The data for our datasets
+      data: {
+          labels: rowNatData,
+          datasets: [{
+              label: 'current cases',
+              backgroundColor: 'rgb(114, 147, 203)',
+              borderColor: 'rgb(57, 106, 177)',
+              data: rowNatInfetti
+          },
+          {
+              label: 'recovered',
+              backgroundColor: 'rgb(132, 186, 91)',
+              borderColor: 'rgb(62, 150, 81)',
+              data: rowNatGuariti
+          },
+          {
+              label: 'deceased',
+              backgroundColor: 'rgb(225, 151, 76)',
+              borderColor: 'rgb(218, 124, 48)',
+              data: rowNatDeceduti
+          }
+        ]
+      },
+  
+      // Configuration options go here
+      options: {
+        scales: {
+            yAxes: [{
+                stacked: true
+            }]
+        }
+      }
+    });
+  }
+
+  function drawRegionalInfectionChart(regionNumber) {
     var ctx = document.getElementById('myChart'+regionNumber).getContext('2d');
     var chart = new Chart(ctx, {
       // The type of chart we want to create
@@ -107,6 +184,31 @@
                 stacked: true
             }]
         }
+      }
+    });
+  }
+
+  function drawNationalMortalityChart() {
+    var ctx = document.getElementById('natMortalityChart').getContext('2d');
+    var chart = new Chart(ctx, {
+      // The type of chart we want to create
+      type: 'line',
+  
+      // The data for our datasets
+      data: {
+          labels: rowNatData,
+          datasets: [{
+              label: 'mortality rate %',
+              backgroundColor: 'rgb(100, 100, 100)',
+              borderColor: 'rgb(66, 66, 66)',
+              data: rowNatMortalita
+          }
+        ]
+      },
+  
+      // Configuration options go here
+      options: {
+        maintainAspectRatio: false,
       }
     });
   }

@@ -66,6 +66,12 @@
       }
 
       for (var i in result) {
+        // hopefully temp fix in case codice_regione becomes a string for some reason (2020-03-18)
+        
+        if (typeof result[i].codice_regione == "string") {
+          result[i].codice_regione = Number(result[i].codice_regione);
+        }
+
         rowRegione[result[i].codice_regione] = result[i].denominazione_regione;
         rowData[result[i].codice_regione].push(result[i].data.substr(5,5)); // just the mm-dd
         rowInfetti[result[i].codice_regione].push(result[i].totale_attualmente_positivi);

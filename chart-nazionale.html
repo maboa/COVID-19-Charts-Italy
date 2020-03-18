@@ -1,0 +1,398 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>COVID-19 cases in Italy</title>
+</head>
+<body>
+<style>
+  body {
+    text-align: center; 
+    font-family: 'Linux Libertine','Georgia','Times',serif; 
+    color: #404040
+  }
+
+  .canvas-holder {
+    padding:16px;
+  }
+</style>
+
+<h2>COVID-19 cases in Italy</h2>
+
+<div id="chart-holder"></div>
+
+
+<h4>data source : <a href="https://github.com/pcm-dpc/COVID-19">https://github.com/pcm-dpc/COVID-19</a></h4>
+<h4>source code : <a href="https://github.com/maboa/COVID-19-Charts-Italy">https://github.com/maboa/COVID-19-Charts-Italy/</a></h4>
+<h4><a href="https://github.com/maboa/COVID-19-Charts-Italy/blob/master/disclaimer.md">DISCLAIMER</a></h4>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3"></script>
+<script>
+
+  document.getElementById('chart-holder').innerHTML += `<h3><span>Italy</span></h3><div class="canvas-holder"><canvas id="nationalChart">></canvas></div><h2>Regional Breakdown</h2><a href="chart-regione-tutte">Individual Regional Charts</a><div class="canvas-holder"><canvas id="nationalRegionalChart"></canvas></div><div class="canvas-holder"><canvas id="nationalCasesPercentChart"></canvas></div><div class="canvas-holder"><canvas id="nationalDeceasedPercentChart"></canvas></div><div class="canvas-holder style="height:100"><div class="canvas-holder style="height:100"><canvas id="natMortalityChart"></canvas></div><div class="canvas-holder style="height:100"><canvas id="natTestedChart"></canvas></div><div class="canvas-holder style="height:100"><canvas id="natTestedPositiveChart"></canvas></div>`;
+
+  var rowNatData = [];
+  var rowNatInfetti = [];
+  var rowNatInfettiIncPercentuale = [];
+  var rowNatGuariti = [];
+  var rowNatGuaritiIncPercentuale = [];
+  var rowNatDeceduti = [];
+  var rowNatDecedutiIncPercentuale = [];
+  var rowNatMortalita = [];
+  var rowNatTamponi = [];
+  var rowNatTotaleCasi = [];
+  var rowNatTotaleCasiIncPercentuale = [];
+  var rowNatPercentualeTamponiPositivi = [];
+  var rowNatRicoveratiConSitomi = [];
+  var rowNatIsolamentoDomiciliare =[];
+  var rowNatTerapiaIntensiva = [];
+
+  fetch("https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-json/dpc-covid19-ita-andamento-nazionale.json")
+    .then(function(response) {
+      return response.json();
+    })
+    .then(function(result) {
+
+      for (var i in result) {
+        rowNatData.push(result[i].data.substr(5,5)); // just the mm-dd
+        rowNatInfetti.push(result[i].totale_attualmente_positivi);
+
+        if (i > 0) {
+          rowNatInfettiIncPercentuale.push(((result[i].totale_attualmente_positivi * 100 / result[i-1].totale_attualmente_positivi) - 100).toFixed(1));
+        } else {
+          rowNatInfettiIncPercentuale.push(0);
+        }
+
+
+        rowNatGuariti.push(result[i].dimessi_guariti);
+
+        if (i > 0) {
+          rowNatGuaritiIncPercentuale.push(((result[i].dimessi_guariti * 100 / result[i-1].dimessi_guariti) - 100).toFixed(1));
+        } else {
+          rowNatGuaritiIncPercentuale.push(0);
+        }
+
+        rowNatDeceduti.push(result[i].deceduti);
+
+        if (i > 0) {
+          rowNatDecedutiIncPercentuale.push(((result[i].deceduti * 100 / result[i-1].deceduti) - 100).toFixed(1));
+        } else {
+          rowNatDecedutiIncPercentuale.push(0);
+        }
+
+        rowNatMortalita.push(((result[i].deceduti / result[i].totale_casi) * 100).toFixed(2)); // rounded to 1 decimal place
+        rowNatTamponi.push(result[i].tamponi);
+        rowNatTotaleCasi.push(result[i].totale_casi);
+        
+        if (i > 0) {
+          rowNatTotaleCasiIncPercentuale.push(((result[i].totale_casi * 100 / result[i-1].totale_casi) - 100).toFixed(1));
+        } else {
+          rowNatTotaleCasiIncPercentuale.push(0);
+        }
+        
+        rowNatPercentualeTamponiPositivi.push(((result[i].totale_casi / result[i].tamponi) * 100).toFixed(1));
+        rowNatRicoveratiConSitomi.push(result[i].ricoverati_con_sintomi);
+        rowNatIsolamentoDomiciliare.push(result[i].isolamento_domiciliare);
+        rowNatTerapiaIntensiva.push(result[i].terapia_intensiva);
+      }
+
+      drawNationalInfectionChart();  
+      drawNationalMortalityChart();  
+      drawNationalTestedChart();   
+      drawNationalTestedPositiveChart();  
+      drawNationalCasesChartIncPercent();   
+      drawNationalDeceasedChartIncPercent();
+
+    });
+
+  var rowRegione = [];
+  var rowTotaleCasi = [];
+
+  fetch("https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-json/dpc-covid19-ita-regioni.json")
+  .then(function(response) {
+    return response.json();
+  })
+  .then(function(result) {
+
+    for (var r = 1; r <= 20; r++) {
+      rowTotaleCasi[r] = [];
+    }
+
+    for (var i in result) {
+      rowRegione[result[i].codice_regione] = result[i].denominazione_regione;
+      rowTotaleCasi[result[i].codice_regione].push(result[i].totale_casi);
+    }
+
+    drawTotaleCasiRegionaleChart();
+    
+  });
+
+  function drawNationalInfectionChart() {
+    var ctx = document.getElementById('nationalChart').getContext('2d');
+
+    var chart = new Chart(ctx, {
+      // The type of chart we want to create
+      type: 'line',
+  
+      // The data for our datasets
+      data: {
+          labels: rowNatData,
+          datasets: [{
+              label: 'Intensive care',
+              backgroundColor: 'rgb(134, 167, 223)',
+              borderColor: 'rgb(77, 126, 197)',
+              data: rowNatTerapiaIntensiva
+          },
+          {
+              label: 'recovering in hospital',
+              backgroundColor: 'rgb(154, 187, 243)',
+              borderColor: 'rgb(97, 146, 217)',
+              data: rowNatRicoveratiConSitomi
+          },
+          {
+              label: 'isolated at home',
+              backgroundColor: 'rgb(114, 147, 203)',
+              borderColor: 'rgb(57, 106, 177)',
+              data: rowNatIsolamentoDomiciliare
+          },
+          {
+              label: 'recovered',
+              backgroundColor: 'rgb(132, 186, 91)',
+              borderColor: 'rgb(62, 150, 81)',
+              data: rowNatGuariti
+          },
+          {
+              label: 'deceased',
+              backgroundColor: 'rgb(225, 151, 76)',
+              borderColor: 'rgb(218, 124, 48)',
+              data: rowNatDeceduti
+          }
+        ]
+      },
+  
+      // Configuration options go here
+      options: {
+        scales: {
+            yAxes: [{
+                stacked: true
+            }]
+        }
+      }
+    });
+  }
+
+  function drawNationalMortalityChart() {
+    var ctx = document.getElementById('natMortalityChart').getContext('2d');
+    var chart = new Chart(ctx, {
+      // The type of chart we want to create
+      type: 'line',
+  
+      // The data for our datasets
+      data: {
+          labels: rowNatData,
+          datasets: [{
+              label: 'mortality rate %',
+              backgroundColor: 'rgb(100, 100, 100)',
+              borderColor: 'rgb(66, 66, 66)',
+              data: rowNatMortalita
+          }
+        ]
+      },
+  
+      // Configuration options go here
+      options: {
+        maintainAspectRatio: false,
+      }
+    });
+  }
+
+  function drawNationalTestedChart() {
+    var ctx = document.getElementById('natTestedChart').getContext('2d');
+    var chart = new Chart(ctx, {
+      // The type of chart we want to create
+      type: 'line',
+  
+      // The data for our datasets
+      data: {
+          labels: rowNatData,
+          datasets: [{
+              label: 'people tested',
+              backgroundColor: 'rgb(150, 150, 200)',
+              borderColor: 'rgb(100, 100, 166)',
+              data: rowNatTamponi
+          }
+        ]
+      },
+  
+      // Configuration options go here
+      options: {
+        maintainAspectRatio: false,
+      }
+    });
+  }
+
+  function drawNationalTestedPositiveChart() {
+    var ctx = document.getElementById('natTestedPositiveChart').getContext('2d');
+    var chart = new Chart(ctx, {
+      // The type of chart we want to create
+      type: 'line',
+  
+      // The data for our datasets
+      data: {
+          labels: rowNatData,
+          datasets: [{
+              label: 'tested positive %',
+              backgroundColor: 'rgb(100, 100, 200)',
+              borderColor: 'rgb(66, 66, 166)',
+              data: rowNatPercentualeTamponiPositivi
+          }
+        ]
+      },
+  
+      // Configuration options go here
+      options: {
+        maintainAspectRatio: false,
+      }
+    });
+  }
+
+  
+
+  function drawNationalCasesChartIncPercent() {
+    var ctx = document.getElementById('nationalCasesPercentChart').getContext('2d');
+    var chart = new Chart(ctx, {
+      // The type of chart we want to create
+      type: 'line',
+  
+      // The data for our datasets
+      data: {
+          labels: rowNatData,
+          datasets: [{
+              label: 'total cases increase %',
+              backgroundColor: 'rgb(120, 100, 200)',
+              borderColor: 'rgb(86, 66, 166)',
+              data: rowNatTotaleCasiIncPercentuale
+          }
+        ]
+      },
+  
+      // Configuration options go here
+      options: {
+        maintainAspectRatio: false,
+      }
+    });
+  }
+
+  function drawNationalDeceasedChartIncPercent() {
+    var ctx = document.getElementById('nationalDeceasedPercentChart').getContext('2d');
+    var chart = new Chart(ctx, {
+      // The type of chart we want to create
+      type: 'line',
+  
+      // The data for our datasets
+      data: {
+          labels: rowNatData,
+          datasets: [{
+              label: 'death increase %',
+              backgroundColor: 'rgb(120, 120, 120)',
+              borderColor: 'rgb(86, 86, 86)',
+              data: rowNatDecedutiIncPercentuale
+          }
+        ]
+      },
+  
+      // Configuration options go here
+      options: {
+        maintainAspectRatio: false,
+      }
+    });
+  }
+
+  function drawTotaleCasiRegionaleChart() {
+    var ctx = document.getElementById('nationalRegionalChart').getContext('2d');
+
+    var myData = {};
+    myData.labels = rowNatData;
+    myData.datasets = [];
+
+
+    for (var s = 0; s <= 19; s++) {
+      myData.datasets[s] = {};
+      myData.datasets[s].label = rowRegione[s+1];
+
+      /*if (s % 2 == 0) {
+        myData.datasets[s].backgroundColor = `rgb(${s*12 + 55}, ${s*12}, ${s*12})`;
+        myData.datasets[s].borderColor = `rgb(${s*6 + 55}, ${s*6}, ${s*6})`;
+      } else {
+        myData.datasets[s].backgroundColor = `rgb(${s*12}, ${s*12}, ${s*12 + 55})`;
+        myData.datasets[s].borderColor = `rgb(${s*6}, ${s*6}, ${s*6 + 55})`;
+      }*/
+      
+      myData.datasets[s].data = rowTotaleCasi[s+1];
+    }
+
+    // colours
+
+    myData.datasets[0].backgroundColor = "rgb(77, 77, 77)";
+    myData.datasets[0].color = "rgb(33, 33, 33)";
+    myData.datasets[1].backgroundColor = "rgb(150, 165, 238)";
+    myData.datasets[1].color = "rgb(63, 135, 180)";
+    myData.datasets[2].backgroundColor = "rgb(250, 164, 58)";
+    myData.datasets[2].color = "rgb(200, 135, 30)";
+    myData.datasets[3].backgroundColor = "rgb(96, 189, 104)";
+    myData.datasets[3].color = "rgb(66, 150, 70)";
+    myData.datasets[4].backgroundColor = "rgb(241, 124, 196)";
+    myData.datasets[4].color = "rgb(200, 100, 140)";
+    myData.datasets[5].backgroundColor = "rgb(178, 145, 47)";
+    myData.datasets[5].color = "rgb(158, 120, 27)";
+    myData.datasets[6].backgroundColor = "rgb(178, 118, 178)";
+    myData.datasets[6].color = "rgb(158, 100, 158)";
+    myData.datasets[7].backgroundColor = "rgb(222, 207, 63)";
+    myData.datasets[7].color = "rgb(180, 190, 40)";
+    myData.datasets[8].backgroundColor = "rgb(241, 88, 84)";
+    myData.datasets[8].color = "rgb(200, 68, 54)";
+    myData.datasets[9].backgroundColor = "rgb(146, 36, 140)";
+    myData.datasets[9].color = "rgb(126, 10, 24)";
+    myData.datasets[10].backgroundColor = "rgb(77, 77, 77)";
+    myData.datasets[10].color = "rgb(200, 200, 200)";
+    myData.datasets[11].backgroundColor = "rgb(93, 165, 218)";
+    myData.datasets[11].color = "rgb(150, 210, 255)";
+    myData.datasets[12].backgroundColor = "rgb(255, 194, 78)";
+    myData.datasets[12].color = "rgb(255, 200, 90)";
+    myData.datasets[13].backgroundColor = "rgb(176, 210, 104)";
+    myData.datasets[13].color = "rgb(130, 190, 140)";
+    myData.datasets[14].backgroundColor = "rgb(241, 194, 220)";
+    myData.datasets[14].color = "rgb(255, 160, 220)";
+    myData.datasets[15].backgroundColor = "rgb(128, 145, 47)";
+    myData.datasets[15].color = "rgb(205, 190, 67)";
+    myData.datasets[16].backgroundColor = "rgb(255, 118, 178)";
+    myData.datasets[16].color = "rgb(210, 150, 200)";
+    myData.datasets[17].backgroundColor = "rgb(255, 207, 63)";
+    myData.datasets[17].color = "rgb(250, 240, 90)";
+    myData.datasets[18].backgroundColor = "rgb(255, 20, 24)";
+    myData.datasets[18].color = "rgb(255, 120, 110)";
+    myData.datasets[19].backgroundColor = "rgb(146, 96, 40)";
+    myData.datasets[19].color = "rgb(176, 66, 70)";
+
+
+    var chart = new Chart(ctx, {
+      // The type of chart we want to create
+      type: 'line',
+
+      // The data for our datasets
+      data: myData,
+
+      // Configuration options go here
+      options: {
+        scales: {
+            yAxes: [{
+                stacked: true
+            }]
+        }
+      }
+    });  
+  }
+
+  </script>
+  </body>
+  </html>

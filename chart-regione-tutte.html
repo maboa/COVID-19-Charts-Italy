@@ -18,6 +18,7 @@
 </style>
 
 <h2>COVID-19 cases in Italy by Region</h2>
+<a href="chart-nazionale">National Chart</a>
 
 <div id="chart-holder"></div>
 
@@ -30,23 +31,11 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3"></script>
 <script>
 
-  document.getElementById('chart-holder').innerHTML += `<h3><span>Italy</span></h3><div class="canvas-holder"><canvas id="nationalChart">></canvas></div><div class="canvas-holder style="height:100"><div class="canvas-holder style="height:100"><canvas id="natMortalityChart"></canvas></div><div class="canvas-holder style="height:100"><canvas id="natTestedChart"></canvas></div><div class="canvas-holder style="height:100"><canvas id="natTestedPositiveChart"></canvas></div>`;
-
   // set up the 20 canvases for the 20 regions
 
   for (var t = 1; t <= 20; t++) {
     document.getElementById('chart-holder').innerHTML += `<h3><span class="region"></span></h3><div class="canvas-holder"><canvas id="myChart${t}"></canvas></div><div class="canvas-holder style="height:100"><canvas id="mortalityChart${t}"></canvas></div><div class="canvas-holder style="height:100"><canvas id="testedChart${t}"></canvas></div><div class="canvas-holder style="height:100"><canvas id="testedPositiveChart${t}"></canvas></div>`;
   }
-
-
-  var rowNatData = [];
-  var rowNatInfetti = [];
-  var rowNatGuariti = [];
-  var rowNatDeceduti = [];
-  var rowNatMortalita = [];
-  var rowNatTamponi = [];
-  var rowNatTotaleCasi = [];
-  var rowPercentualeTamponiPositivi = [];
 
 
   var rowRegione = [];
@@ -57,31 +46,7 @@
   var rowMortalita = [];
   var rowTamponi = [];
   var rowTotaleCasi = [];
-  var rowNatPercentualeTamponiPositivi = [];
-
-  fetch("https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-json/dpc-covid19-ita-andamento-nazionale.json")
-    .then(function(response) {
-      return response.json();
-    })
-    .then(function(result) {
-
-      for (var i in result) {
-        rowNatData.push(result[i].data.substr(0,10)); // just the yyyy-mm-dd
-        rowNatInfetti.push(result[i].totale_attualmente_positivi);
-        rowNatGuariti.push(result[i].dimessi_guariti);
-        rowNatDeceduti.push(result[i].deceduti);
-        rowNatMortalita.push(Math.round((100 * result[i].deceduti / result[i].totale_casi) * 100) / 100); // rounded to 2 decimal places
-        rowNatTamponi.push(result[i].tamponi);
-        rowNatTotaleCasi.push(result[i].totale_casi);
-        rowNatPercentualeTamponiPositivi.push(Math.round((100 * result[i].totale_casi / result[i].tamponi) * 100) / 100);
-      }
-
-      drawNationalInfectionChart();  
-      drawNationalMortalityChart();  
-      drawNationalTestedChart();   
-      drawNationalTestedPositiveChart();   
-
-    });
+  var rowPercentualeTamponiPositivi = [];
 
   fetch("https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-json/dpc-covid19-ita-regioni.json")
     .then(function(response) {
@@ -102,15 +67,15 @@
 
       for (var i in result) {
         rowRegione[result[i].codice_regione] = result[i].denominazione_regione;
-        rowData[result[i].codice_regione].push(result[i].data.substr(0,10)); // just the yyyy-mm-dd
+        rowData[result[i].codice_regione].push(result[i].data.substr(5,5)); // just the mm-dd
         rowInfetti[result[i].codice_regione].push(result[i].totale_attualmente_positivi);
         rowGuariti[result[i].codice_regione].push(result[i].dimessi_guariti);
         rowDeceduti[result[i].codice_regione].push(result[i].deceduti);
-        rowMortalita[result[i].codice_regione].push(Math.round((100 * result[i].deceduti / result[i].totale_casi) * 100) / 100); // rounded to 2 decimal places
+        rowMortalita[result[i].codice_regione].push(((result[i].deceduti / result[i].totale_casi) * 100).toFixed(1)); // rounded to 1 decimal place
         rowTamponi[result[i].codice_regione].push(result[i].tamponi);
         rowTotaleCasi[result[i].codice_regione].push(result[i].totale_casi);
         if (result[i].tamponi > 0 && result[i].tamponi != null && result[i].totale_casi > 0 && result[i].totale_casi != null) {
-          rowPercentualeTamponiPositivi[result[i].codice_regione].push(Math.round((100 * result[i].totale_casi / result[i].tamponi) * 100) / 100);
+          rowPercentualeTamponiPositivi[result[i].codice_regione].push(((result[i].totale_casi / result[i].tamponi) * 100).toFixed(1));
         } else {
           rowPercentualeTamponiPositivi[result[i].codice_regione].push(0);
         }
@@ -127,47 +92,7 @@
       
     });
 
-  function drawNationalInfectionChart() {
-    var ctx = document.getElementById('nationalChart').getContext('2d');
-
-    var chart = new Chart(ctx, {
-      // The type of chart we want to create
-      type: 'line',
   
-      // The data for our datasets
-      data: {
-          labels: rowNatData,
-          datasets: [{
-              label: 'current cases',
-              backgroundColor: 'rgb(114, 147, 203)',
-              borderColor: 'rgb(57, 106, 177)',
-              data: rowNatInfetti
-          },
-          {
-              label: 'recovered',
-              backgroundColor: 'rgb(132, 186, 91)',
-              borderColor: 'rgb(62, 150, 81)',
-              data: rowNatGuariti
-          },
-          {
-              label: 'deceased',
-              backgroundColor: 'rgb(225, 151, 76)',
-              borderColor: 'rgb(218, 124, 48)',
-              data: rowNatDeceduti
-          }
-        ]
-      },
-  
-      // Configuration options go here
-      options: {
-        scales: {
-            yAxes: [{
-                stacked: true
-            }]
-        }
-      }
-    });
-  }
 
   function drawRegionalInfectionChart(regionNumber) {
     var ctx = document.getElementById('myChart'+regionNumber).getContext('2d');
@@ -210,30 +135,6 @@
     });
   }
 
-  function drawNationalMortalityChart() {
-    var ctx = document.getElementById('natMortalityChart').getContext('2d');
-    var chart = new Chart(ctx, {
-      // The type of chart we want to create
-      type: 'line',
-  
-      // The data for our datasets
-      data: {
-          labels: rowNatData,
-          datasets: [{
-              label: 'mortality rate %',
-              backgroundColor: 'rgb(100, 100, 100)',
-              borderColor: 'rgb(66, 66, 66)',
-              data: rowNatMortalita
-          }
-        ]
-      },
-  
-      // Configuration options go here
-      options: {
-        maintainAspectRatio: false,
-      }
-    });
-  }
 
   function drawMortalityChart(regionNumber) {
     var ctx = document.getElementById('mortalityChart'+regionNumber).getContext('2d');
@@ -260,30 +161,6 @@
     });
   }
 
-  function drawNationalTestedChart() {
-    var ctx = document.getElementById('natTestedChart').getContext('2d');
-    var chart = new Chart(ctx, {
-      // The type of chart we want to create
-      type: 'line',
-  
-      // The data for our datasets
-      data: {
-          labels: rowNatData,
-          datasets: [{
-              label: 'people tested',
-              backgroundColor: 'rgb(150, 150, 200)',
-              borderColor: 'rgb(100, 100, 166)',
-              data: rowNatTamponi
-          }
-        ]
-      },
-  
-      // Configuration options go here
-      options: {
-        maintainAspectRatio: false,
-      }
-    });
-  }
 
   function drawTestedChart(regionNumber) {
     var ctx = document.getElementById('testedChart'+regionNumber).getContext('2d');
@@ -293,7 +170,7 @@
   
       // The data for our datasets
       data: {
-          labels: rowNatData,
+          labels: rowData[1],
           datasets: [{
               label: 'people tested',
               backgroundColor: 'rgb(150, 150, 200)',
@@ -310,30 +187,7 @@
     });
   }
 
-  function drawNationalTestedPositiveChart() {
-    var ctx = document.getElementById('natTestedPositiveChart').getContext('2d');
-    var chart = new Chart(ctx, {
-      // The type of chart we want to create
-      type: 'line',
-  
-      // The data for our datasets
-      data: {
-          labels: rowNatData,
-          datasets: [{
-              label: 'tested positive %',
-              backgroundColor: 'rgb(100, 100, 200)',
-              borderColor: 'rgb(66, 66, 166)',
-              data: rowNatPercentualeTamponiPositivi
-          }
-        ]
-      },
-  
-      // Configuration options go here
-      options: {
-        maintainAspectRatio: false,
-      }
-    });
-  }
+
 
   function drawTestedPositiveChart(regionNumber) {
     var ctx = document.getElementById('testedPositiveChart'+regionNumber).getContext('2d');
@@ -343,7 +197,7 @@
   
       // The data for our datasets
       data: {
-          labels: rowNatData,
+          labels: rowData[1],
           datasets: [{
               label: 'tested positive %',
               backgroundColor: 'rgb(100, 100, 200)',

@@ -15,11 +15,61 @@
   .canvas-holder {
     padding:16px;
   }
+
+  table, th, td {
+    padding: 10px;
+    border: 1px solid black; 
+    border-collapse: collapse;
+    text-align: right; 
+    font-size: 12px;
+  }
+
+  .data-holder {
+    padding-right: 32px;
+  }
 </style>
 
 <h2>COVID-19 cases in Italy</h2>
 
-<div id="chart-holder"></div>
+
+<h3><span>Italy</span></h3>
+<div class="canvas-holder"><canvas id="nationalChart">></canvas></div>
+
+<div class="data-holder">
+  <table style="width:100%">
+    <tr id="nationalRegionalChartDate" >
+      <td style="width:32px">Date</td>
+    </tr>
+    <tr id="nationalRegionalChartTotalCases">
+      <td>Total Cases</td>
+    </tr>
+    <tr id="nationalIntensiveCare">
+      <td>Intensive Care</td>
+    </tr>
+    <tr id="nationalRecoveringInHospital">
+      <td>Recovering in Hospital</td>
+    </tr>
+    <tr id="nationalIsolatedAtHome">
+      <td>Isolated at Home</td>
+    </tr>
+    <tr id="nationalDeceased">
+      <td>Deceased</td>
+    </tr>
+    <tr id="nationalRecovered">
+      <td>Recovered</td>
+    </tr>
+  </table>
+</div>
+
+<h2>Regional Breakdown</h2>
+<a href="chart-regione-tutte">Individual Regional Charts</a>
+<div class="canvas-holder"><canvas id="nationalRegionalChart"></canvas></div>
+
+<div class="canvas-holder"><canvas id="nationalCasesPercentChart"></canvas></div>
+<div class="canvas-holder"><canvas id="nationalDeceasedPercentChart"></canvas></div>
+<div class="canvas-holder style="height:100"><canvas id="natMortalityChart"></canvas></div>
+<div class="canvas-holder style="height:100"><canvas id="natTestedChart"></canvas></div>
+<div class="canvas-holder style="height:100"><canvas id="natTestedPositiveChart"></canvas></div>
 
 
 <h4>data source : <a href="https://github.com/pcm-dpc/COVID-19">https://github.com/pcm-dpc/COVID-19</a></h4>
@@ -29,7 +79,9 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3"></script>
 <script>
 
-  document.getElementById('chart-holder').innerHTML += `<h3><span>Italy</span></h3><div class="canvas-holder"><canvas id="nationalChart">></canvas></div><h2>Regional Breakdown</h2><a href="chart-regione-tutte">Individual Regional Charts</a><div class="canvas-holder"><canvas id="nationalRegionalChart"></canvas></div><div class="canvas-holder"><canvas id="nationalCasesPercentChart"></canvas></div><div class="canvas-holder"><canvas id="nationalDeceasedPercentChart"></canvas></div><div class="canvas-holder style="height:100"><div class="canvas-holder style="height:100"><canvas id="natMortalityChart"></canvas></div><div class="canvas-holder style="height:100"><canvas id="natTestedChart"></canvas></div><div class="canvas-holder style="height:100"><canvas id="natTestedPositiveChart"></canvas></div>`;
+  
+
+  //document.getElementById('chart-holder').innerHTML += `<h3><span>Italy</span></h3><div class="canvas-holder"><canvas id="nationalChart">></canvas></div><h2>Regional Breakdown</h2><a href="chart-regione-tutte">Individual Regional Charts</a><div class="canvas-holder"><canvas id="nationalRegionalChart"></canvas></div><div class="canvas-holder"><canvas id="nationalCasesPercentChart"></canvas></div><div class="canvas-holder"><canvas id="nationalDeceasedPercentChart"></canvas></div><div class="canvas-holder style="height:100"><div class="canvas-holder style="height:100"><canvas id="natMortalityChart"></canvas></div><div class="canvas-holder style="height:100"><canvas id="natTestedChart"></canvas></div><div class="canvas-holder style="height:100"><canvas id="natTestedPositiveChart"></canvas></div>`;
 
   var rowNatData = [];
   var rowNatInfetti = [];
@@ -97,6 +149,8 @@
       }
 
       drawNationalInfectionChart();  
+      drawNationalInfectionTable();  
+
       drawNationalMortalityChart();  
       drawNationalTestedChart();   
       drawNationalTestedPositiveChart();  
@@ -132,7 +186,28 @@
 
     drawTotaleCasiRegionaleChart();
     
+    
   });
+
+  function drawNationalInfectionTable() {
+    var d1 = document.getElementById('nationalRegionalChartDate');
+    var d2 = document.getElementById('nationalRegionalChartTotalCases');
+    var d3 = document.getElementById('nationalIntensiveCare');
+    var d4 = document.getElementById('nationalRecoveringInHospital');
+    var d5 = document.getElementById('nationalIsolatedAtHome');
+    var d6 = document.getElementById('nationalDeceased');
+    var d7 = document.getElementById('nationalRecovered');
+
+    for (var i=0; i < rowNatData.length; i++) {
+      d1.insertAdjacentHTML('beforeend', `<td>${rowNatData[i]}</td>`);
+      d2.insertAdjacentHTML('beforeend', `<td>${rowNatTotaleCasi[i]}</td>`);
+      d3.insertAdjacentHTML('beforeend', `<td>${rowNatTerapiaIntensiva[i]}</td>`);
+      d4.insertAdjacentHTML('beforeend', `<td>${rowNatRicoveratiConSitomi[i]}</td>`);
+      d5.insertAdjacentHTML('beforeend', `<td>${rowNatIsolamentoDomiciliare[i]}</td>`);
+      d6.insertAdjacentHTML('beforeend', `<td>${rowNatDeceduti[i]}</td>`);
+      d7.insertAdjacentHTML('beforeend', `<td>${rowNatGuariti[i]}</td>`);
+    }
+  }
 
   function drawNationalInfectionChart() {
     var ctx = document.getElementById('nationalChart').getContext('2d');

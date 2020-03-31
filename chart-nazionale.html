@@ -100,64 +100,66 @@
   var rowNatTerapiaIntensiva = [];
 
   fetch("https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-json/dpc-covid19-ita-andamento-nazionale.json")
-    .then(function(response) {
-      return response.json();
-    })
-    .then(function(result) {
+  .then(function(response) {
+    return response.json();
+  })
+  .then(function(result) {
 
-      for (var i in result) {
-        rowNatData.push(result[i].data.substr(5,5)); // just the mm-dd
-        rowNatInfetti.push(result[i].totale_attualmente_positivi);
+    for (var i in result) {
+      rowNatData.push(result[i].data.substr(5,5)); // just the mm-dd
+      rowNatInfetti.push(result[i].totale_attualmente_positivi);
 
-        if (i > 0) {
-          rowNatInfettiIncPercentuale.push(((result[i].totale_attualmente_positivi * 100 / result[i-1].totale_attualmente_positivi) - 100).toFixed(1));
-        } else {
-          rowNatInfettiIncPercentuale.push(0);
-        }
-
-
-        rowNatGuariti.push(result[i].dimessi_guariti);
-
-        if (i > 0) {
-          rowNatGuaritiIncPercentuale.push(((result[i].dimessi_guariti * 100 / result[i-1].dimessi_guariti) - 100).toFixed(1));
-        } else {
-          rowNatGuaritiIncPercentuale.push(0);
-        }
-
-        rowNatDeceduti.push(result[i].deceduti);
-
-        if (i > 0) {
-          rowNatDecedutiIncPercentuale.push(((result[i].deceduti * 100 / result[i-1].deceduti) - 100).toFixed(1));
-        } else {
-          rowNatDecedutiIncPercentuale.push(0);
-        }
-
-        rowNatMortalita.push(((result[i].deceduti / result[i].totale_casi) * 100).toFixed(2)); // rounded to 1 decimal place
-        rowNatTamponi.push(result[i].tamponi);
-        rowNatTotaleCasi.push(result[i].totale_casi);
-        
-        if (i > 0) {
-          rowNatTotaleCasiIncPercentuale.push(((result[i].totale_casi * 100 / result[i-1].totale_casi) - 100).toFixed(1));
-        } else {
-          rowNatTotaleCasiIncPercentuale.push(0);
-        }
-        
-        rowNatPercentualeTamponiPositivi.push(((result[i].totale_casi / result[i].tamponi) * 100).toFixed(1));
-        rowNatRicoveratiConSitomi.push(result[i].ricoverati_con_sintomi);
-        rowNatIsolamentoDomiciliare.push(result[i].isolamento_domiciliare);
-        rowNatTerapiaIntensiva.push(result[i].terapia_intensiva);
+      if (i > 0) {
+        rowNatInfettiIncPercentuale.push(((result[i].totale_attualmente_positivi * 100 / result[i-1].totale_attualmente_positivi) - 100).toFixed(1));
+      } else {
+        rowNatInfettiIncPercentuale.push(0);
       }
 
-      drawNationalInfectionChart();  
-      drawNationalInfectionTable();  
 
-      drawNationalMortalityChart();  
-      drawNationalTestedChart();   
-      drawNationalTestedPositiveChart();  
-      drawNationalCasesChartIncPercent();   
-      drawNationalDeceasedChartIncPercent();
+      rowNatGuariti.push(result[i].dimessi_guariti);
 
-    });
+      if (i > 0) {
+        rowNatGuaritiIncPercentuale.push(((result[i].dimessi_guariti * 100 / result[i-1].dimessi_guariti) - 100).toFixed(1));
+      } else {
+        rowNatGuaritiIncPercentuale.push(0);
+      }
+
+      rowNatDeceduti.push(result[i].deceduti);
+
+      if (i > 0) {
+        rowNatDecedutiIncPercentuale.push(((result[i].deceduti * 100 / result[i-1].deceduti) - 100).toFixed(1));
+      } else {
+        rowNatDecedutiIncPercentuale.push(0);
+      }
+
+      rowNatMortalita.push(((result[i].deceduti / result[i].totale_casi) * 100).toFixed(2)); // rounded to 1 decimal place
+      rowNatTamponi.push(result[i].tamponi);
+      rowNatTotaleCasi.push(result[i].totale_casi);
+      
+      if (i > 0) {
+        rowNatTotaleCasiIncPercentuale.push(((result[i].totale_casi * 100 / result[i-1].totale_casi) - 100).toFixed(1));
+      } else {
+        rowNatTotaleCasiIncPercentuale.push(0);
+      }
+      
+      rowNatPercentualeTamponiPositivi.push(((result[i].totale_casi / result[i].tamponi) * 100).toFixed(1));
+      rowNatRicoveratiConSitomi.push(result[i].ricoverati_con_sintomi);
+      rowNatIsolamentoDomiciliare.push(result[i].isolamento_domiciliare);
+      rowNatTerapiaIntensiva.push(result[i].terapia_intensiva);
+    }
+    console.log(1);
+  })
+  .then(function() {
+    console.log(2);
+    drawNationalInfectionChart();  
+    drawNationalInfectionTable();  
+
+    drawNationalMortalityChart();  
+    drawNationalTestedChart();   
+    drawNationalTestedPositiveChart();  
+    drawNationalCasesChartIncPercent();   
+    drawNationalDeceasedChartIncPercent();
+  });
 
   var rowRegione = [];
   var rowTotaleCasi = [];
@@ -183,10 +185,11 @@
       rowRegione[result[i].codice_regione] = result[i].denominazione_regione;
       rowTotaleCasi[result[i].codice_regione].push(result[i].totale_casi);
     }
-
+    console.log(3);
+  })
+  .then(function() {
+    console.log(4);
     drawTotaleCasiRegionaleChart();
-    
-    
   });
 
   function drawNationalInfectionTable() {

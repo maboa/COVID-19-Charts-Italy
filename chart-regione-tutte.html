@@ -74,7 +74,16 @@
 
         rowRegione[result[i].codice_regione] = result[i].denominazione_regione;
         rowData[result[i].codice_regione].push(result[i].data.substr(5,5)); // just the mm-dd
-        rowInfetti[result[i].codice_regione].push(result[i].totale_attualmente_positivi);
+
+
+        // hopefully temp fix for field name change in JSON (2020-03-31)
+        
+        if (result[i].totale_attualmente_positivi != null) {
+          rowInfetti[result[i].codice_regione].push(result[i].totale_attualmente_positivi);
+        } else {
+          rowInfetti[result[i].codice_regione].push(result[i].totale_positivi);
+        }
+        
         rowGuariti[result[i].codice_regione].push(result[i].dimessi_guariti);
         rowDeceduti[result[i].codice_regione].push(result[i].deceduti);
         rowMortalita[result[i].codice_regione].push(((result[i].deceduti / result[i].totale_casi) * 100).toFixed(1)); // rounded to 1 decimal place

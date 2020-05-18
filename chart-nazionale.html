@@ -182,14 +182,14 @@
         result[i].codice_regione = Number(result[i].codice_regione);
       }
 
-      rowRegione[result[i].codice_regione] = result[i].denominazione_regione;
-      rowTotaleCasi[result[i].codice_regione].push(result[i].totale_casi);
+      // temp removal
+      //rowRegione[result[i].codice_regione] = result[i].denominazione_regione;
+      //rowTotaleCasi[result[i].codice_regione].push(result[i].totale_casi);
     }
-    console.log(3);
   })
   .then(function() {
-    console.log(4);
-    drawTotaleCasiRegionaleChart();
+    // temp removal
+    //drawTotaleCasiRegionaleChart();
   });
 
   function drawNationalInfectionTable() {

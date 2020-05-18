@@ -31,10 +31,9 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3"></script>
 <script>
 
-  // set up the 20 canvases for the 20 regions
 
-  for (var t = 1; t <= 20; t++) {
-    document.getElementById('chart-holder').innerHTML += `<h3><span class="region"></span></h3><div class="canvas-holder"><canvas id="myChart${t}"></canvas></div><div class="canvas-holder style="height:100"><canvas id="mortalityChart${t}"></canvas></div><div class="canvas-holder style="height:100"><canvas id="testedChart${t}"></canvas></div><div class="canvas-holder style="height:100"><canvas id="testedPositiveChart${t}"></canvas></div>`;
+  for (var t = 1; t <= 22; t++) {
+    document.getElementById('chart-holder').innerHTML += `<div class="region-chart-holder" style="display:none"><h3><span class="region"></span></h3><div class="canvas-holder"><canvas id="myChart${t}"></canvas></div><div class="canvas-holder style="height:100"><canvas id="mortalityChart${t}"></canvas></div><div class="canvas-holder style="height:100"><canvas id="testedChart${t}"></canvas></div><div class="canvas-holder style="height:100"><canvas id="testedPositiveChart${t}"></canvas></div></div>`;
   }
 
 
@@ -54,7 +53,7 @@
     })
     .then(function(result) {
 
-      for (var r = 1; r <= 20; r++) {
+      for (var r = 1; r <= 22; r++) {
         rowData[r] = [];
         rowInfetti[r] = [];
         rowGuariti[r] = [];
@@ -73,6 +72,10 @@
         }
 
         rowRegione[result[i].codice_regione] = result[i].denominazione_regione;
+        console.log("result[i]");
+        console.log(result[i]);
+        console.log(result[i].codice_regione);
+        console.log(rowData);
         rowData[result[i].codice_regione].push(result[i].data.substr(5,5)); // just the mm-dd
 
 
@@ -97,12 +100,16 @@
       }
 
 
-      for (var s = 1; s <= 20; s++) {
-        document.getElementsByClassName('region')[s-1].innerText = rowRegione[s];
-        drawRegionalInfectionChart(s);
-        drawMortalityChart(s);
-        drawTestedChart(s);   
-        drawTestedPositiveChart(s); 
+      for (var s = 1; s <= 22; s++) {
+        if (rowRegione[s] != null) {
+
+          document.getElementsByClassName('region')[s-1].innerText = rowRegione[s];
+          document.getElementsByClassName('region-chart-holder')[s-1].style.display = "block";
+          drawRegionalInfectionChart(s);
+          drawMortalityChart(s);
+          drawTestedChart(s);   
+          drawTestedPositiveChart(s); 
+        }
       }
       
     });
